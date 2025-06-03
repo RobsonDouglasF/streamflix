@@ -1,20 +1,35 @@
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Checkbox, Col, Flex, Input, Form, Typography } from "antd";
 
-import {  useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { RequestToken } from "../../../Data/LocalStorage/requestToken";
-import { Autenticacao } from "../../../Data/Requisicoes/Autenticacao";
+import { RequestToken } from "../../../data/LocalStorage/requestToken";
+import { Autenticacao } from "../../../data/Requisicoes/Autenticacao";
 
 export default function Login() {
   const [usuario, setUsuario] = useState<string>("");
   const [senha, setSenha] = useState<string>("");
   const token = RequestToken.getRequestToken();
   const navigate = useNavigate();
-  console.log(token);
 
-  const { mutate, isPending } = useMutation({
+  const { data: pegarToken, isFetching } = useQuery({
+    queryKey: ["RequerindoToken"],
+    queryFn: () => Autenticacao.getRequestToken(),
+  });
+  const sessionTokenMutate = useMutation({
+    mutationKey: ['sessionToken'],
+    mutationFn: (request: string) => Autenticacao.sessionToken({request_token:request}),
+    onSuccess: (data) => {
+      RequestToken.setRequestSession(data.session_id)
+      navigate('/principal')
+    },
+    onError: () => {
+      alert('Erro de session')
+    }
+  })
+
+  const { mutate } = useMutation({
     mutationKey: ["chaveLogin"],
     mutationFn: () =>
       Autenticacao.login({
@@ -22,13 +37,18 @@ export default function Login() {
         username: usuario,
         request_token: String(token),
       }),
-    onSuccess: () => {
-      navigate("/principal");
+    onSuccess: (retornoLogin) => {
+      sessionTokenMutate.mutate(retornoLogin.request_token)
     },
     onError: () => {
       alert("Deu erro");
     },
   });
+  useEffect(() => {
+    if (pegarToken) {
+      RequestToken.setTokenRequest(pegarToken.request_token);
+    }
+  }, [pegarToken, token]);
 
   return (
     <Form
@@ -79,7 +99,7 @@ export default function Login() {
 
       <Form.Item>
         <Button
-          loading={isPending}
+          loading={sessionTokenMutate.isPending}
           block
           type="primary"
           htmlType="submit"
@@ -87,6 +107,7 @@ export default function Login() {
           onClick={() => {
             mutate();
           }}
+          disabled={isFetching}
         >
           Acessar
         </Button>

@@ -1,63 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
 import { Col, Divider } from "antd";
 import { useEffect, useState } from "react";
-import { RequestToken } from "../../../Data/LocalStorage/requestToken";
-import {
-  Autenticacao,
-  type Result,
-} from "../../../Data/Requisicoes/Autenticacao";
+import { Filmes, type Result } from "../../../data/Requisicoes/Filmes";
 
 export function Home() {
-  console.log('Inicou')
-  const [filmesPopulares, setFilmesPopulares] = useState<Result[]>([]);
-  const [filmesMaisAssistidos, setFilmesMaisAssistidos] = useState<Result[]>(
-    []
-  );
-  const [filmesLançamentos, setFilmesLancamentos] = useState<Result[]>([]);
-
-    const { data, isSuccess } = useQuery({
-    queryKey: ["RequerindoToken"],
-    queryFn: () => Autenticacao.getRequestToken(),
-  });
-  useEffect(() => {
-    if (isSuccess && data) {
-      RequestToken.setTokenRequest(data.request_token);
-    }
-  }, [data, isSuccess]);
 
   const { data: dataPopulares } = useQuery({
     queryKey: ["populares"],
-    queryFn: () => Autenticacao.dataFilmesPopulares(),
+    queryFn: () => Filmes.dataFilmesPopulares(),
   });
-  useEffect(() => {
-    if (dataPopulares) {
-      RequestToken.setTokenRequest(dataPopulares.request_token);
-      setFilmesPopulares(dataPopulares.results);
-    }
-  }, [dataPopulares]);
 
   const { data: dataMaisAssitidos } = useQuery({
     queryKey: ["maisAssistidos"],
-    queryFn: () => Autenticacao.dataFilmesMaisAssistidos(),
+    queryFn: () => Filmes.dataFilmesMaisAssistidos(),
   });
-  useEffect(() => {
-    if (dataMaisAssitidos) {
-      RequestToken.setTokenRequest(dataMaisAssitidos.request_token);
-      setFilmesMaisAssistidos(dataMaisAssitidos.results);
-    }
-  }, [dataMaisAssitidos]);
 
   const { data: dataLancamento } = useQuery({
     queryKey: ["Lancamentos"],
-    queryFn: () => Autenticacao.dataFilmesLancamentos(),
+    queryFn: () => Filmes.dataFilmesLancamentos(),
   });
-  useEffect(() => {
-    if (dataLancamento) {
-      RequestToken.setTokenRequest(dataLancamento.request_token);
-      setFilmesLancamentos(dataLancamento.results);
-    }
-  }, [dataLancamento]);
+  
+  const [filmesPopulares, setFilmesPopulares] = useState<Result[]>([]);
+  const [filmesMaisAssistidos, setFilmesMaisAssistidos] = useState<Result[]>([]);
+  const [filmesLançamentos, setFilmesLancamentos] = useState<Result[]>([]);  
 
+  useEffect(() => {
+    if(dataPopulares){
+      setFilmesPopulares(dataPopulares.results)      
+    }
+    if(dataMaisAssitidos) {
+      setFilmesMaisAssistidos(dataMaisAssitidos.results)
+    }
+    if(dataLancamento) {
+      setFilmesLancamentos(dataLancamento.results)
+    }  
+  },[dataLancamento, dataMaisAssitidos, dataPopulares])
+  
   return (
     <>
       <Divider className="!text-3xl" orientation="left">

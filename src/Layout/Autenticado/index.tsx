@@ -10,9 +10,11 @@ import {
 } from "antd";
 import { Content, Header } from "antd/es/layout/layout";
 import Sider from "antd/es/layout/Sider";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
+import { RequestToken } from "../../data/LocalStorage/requestToken";
 
 export default function LayoutAutenticado() {
+  const navigate = useNavigate()
   const menuHeader = ["Filmes", "Series", "Programas de TV"];
   const navHeader: MenuProps["items"] = menuHeader.map((label, index) => ({
     key: index + 1,
@@ -53,9 +55,26 @@ export default function LayoutAutenticado() {
   ];
   const menuUser = ["Conta", "Listas", "Avaliações", "Sair"];
   const navHeaderData = menuUser.map((label, index) => ({
-    key: index + 1,
-    label,
+    key: index.toString(),
+    label,    
   }));
+  const menuHeaderClick = ({ key }: { key: string }) => {
+   const select = menuUser[Number(key)]
+  
+   switch (select) {
+      case "Conta":                
+        break;
+      case "Listas":
+        break;
+      case "Avaliações":
+        break;
+      case "Sair":
+        RequestToken.logout()
+        navigate('/home')
+        break;   
+   }   
+  };
+
 
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -75,7 +94,7 @@ export default function LayoutAutenticado() {
             items={navHeader}
             style={{ flex: 1, minWidth: 0 }}
           />
-          <Dropdown menu={{ items: navHeaderData }}>
+          <Dropdown menu={{ items: navHeaderData, onClick: menuHeaderClick }}>
             <Avatar
               icon={<UserOutlined />}
               className="!bg-green-600 !size-10"
